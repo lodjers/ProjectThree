@@ -1,11 +1,14 @@
 package ru.lodjers.springcourse.services;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.lodjers.springcourse.dto.MeasurementDTO;
 import ru.lodjers.springcourse.models.Measurement;
+import ru.lodjers.springcourse.models.Sensor;
 import ru.lodjers.springcourse.repositories.MeasurementRepository;
+import ru.lodjers.springcourse.repositories.SensorRepository;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -16,11 +19,15 @@ public class MeasurementService {
 
     private final MeasurementRepository measurementRepository;
     private final SensorService sensorService;
+    private final ModelMapper modelMapper;
+    private final SensorRepository sensorRepository;
 
     @Autowired
-    public MeasurementService(MeasurementRepository measurementRepository, SensorService sensorService) {
+    public MeasurementService(MeasurementRepository measurementRepository, SensorService sensorService, ModelMapper modelMapper, SensorRepository sensorRepository) {
         this.measurementRepository = measurementRepository;
         this.sensorService = sensorService;
+        this.modelMapper = modelMapper;
+        this.sensorRepository = sensorRepository;
     }
 
     @Transactional
@@ -39,27 +46,17 @@ public class MeasurementService {
 
     public Measurement convertToMeasurement(MeasurementDTO measurementDTO) {
 
-        Measurement measurement = new Measurement();
-
-        measurement.setRaining(measurementDTO.isRaining());
-        measurement.setValue(measurementDTO.getValue());
-        measurement.setSensor(sensorService.convertToSensor(measurementDTO.getSensorDTO()));
-
-        return measurement;
+        return modelMapper.map(measurementDTO, Measurement.class);
     }
 
     public MeasurementDTO convertToMeasurementDTO(Measurement measurement) {
 
-        MeasurementDTO measurementDTO = new MeasurementDTO();
-
-        measurementDTO.setRaining(measurement.isRaining());
-        measurementDTO.setValue(measurement.getValue());
-        measurementDTO.setSensorDTO(sensorService.convertToSensorDTO(measurement.getSensor()));
-
-        return measurementDTO;
+        return modelMapper.map(measurement, MeasurementDTO.class);
     }
 
     private void enrichMeasurement(Measurement measurement) {
+        Sensor sensor = sensorRepository.findByName(measurement.getSensor().getName()).get();
         measurement.setCreatedAt(LocalDateTime.now());
+        measurement.setSensor(sensor);
     }
 }

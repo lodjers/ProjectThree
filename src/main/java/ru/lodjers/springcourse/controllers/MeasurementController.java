@@ -11,10 +11,7 @@ import ru.lodjers.springcourse.dto.MeasurementDTO;
 import ru.lodjers.springcourse.models.Measurement;
 import ru.lodjers.springcourse.services.MeasurementService;
 import ru.lodjers.springcourse.services.SensorService;
-import ru.lodjers.springcourse.util.MeasurementNotCreatedException;
-import ru.lodjers.springcourse.util.MeasurementValidator;
-import ru.lodjers.springcourse.util.SensorErrorResponse;
-import ru.lodjers.springcourse.util.SensorNotCreatedException;
+import ru.lodjers.springcourse.util.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -36,7 +33,6 @@ public class MeasurementController {
     @PostMapping("/add")
     public ResponseEntity<HttpStatus> create(@RequestBody @Valid MeasurementDTO measurementDTO,
                                              BindingResult bindingResult) {
-
         measurementValidator.validate(measurementService.convertToMeasurement(measurementDTO), bindingResult);
 
         if (bindingResult.hasErrors()) {
@@ -56,21 +52,23 @@ public class MeasurementController {
         return ResponseEntity.ok(HttpStatus.OK);
     }
     @ExceptionHandler
-    private ResponseEntity<SensorErrorResponse> handleException(MeasurementNotCreatedException e) {
-        SensorErrorResponse response = new SensorErrorResponse(
+    private ResponseEntity<MeasurementErrorResponse> handleException(MeasurementNotCreatedException e) {
+        MeasurementErrorResponse response = new MeasurementErrorResponse(
                 e.getMessage(),
                 System.currentTimeMillis()
         );
 
         //в HTTP ответе тело ответа (response) и статус в заголовке
-        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); //NOT_FOUND - 494 статус
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST); //NOT_FOUND - 404 статус
     }
 
     @GetMapping
     public List<MeasurementDTO> getMeasurements() {
         return measurementService.findAll().stream()
-                .map(measurementService::convertToMeasurementDTO).collect(Collectors.toList());
+                .map(measurementService::convertToMeasurementDTO).toList();
     }
+
+
     @GetMapping("/rainyDaysCount")
     public long rainyDaysCount() {
         return measurementService.findRainyDays();

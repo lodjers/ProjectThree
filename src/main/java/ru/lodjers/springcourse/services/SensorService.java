@@ -1,5 +1,6 @@
 package ru.lodjers.springcourse.services;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,10 +16,12 @@ import java.util.Optional;
 public class SensorService {
 
     private final SensorRepository sensorRepository;
+    private final ModelMapper modelMapper;
 
     @Autowired
-    public SensorService(SensorRepository sensorRepository) {
+    public SensorService(SensorRepository sensorRepository, ModelMapper modelMapper) {
         this.sensorRepository = sensorRepository;
+        this.modelMapper = modelMapper;
     }
 
     public List<Sensor> findAll() {
@@ -35,17 +38,11 @@ public class SensorService {
     }
     public Sensor convertToSensor(SensorDTO sensorDTO) {
 
-        Sensor sensor = new Sensor();
-        sensor.setName(sensorDTO.getName());
-
-        return sensor;
+        return modelMapper.map(sensorDTO, Sensor.class);
     }
 
     public SensorDTO convertToSensorDTO(Sensor sensor) {
 
-        SensorDTO sensorDTO = new SensorDTO();
-        sensorDTO.setName(sensor.getName());
-
-        return sensorDTO;
+        return modelMapper.map(sensor, SensorDTO.class);
     }
 }
